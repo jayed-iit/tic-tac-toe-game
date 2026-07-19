@@ -1,0 +1,727 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Tic&nbsp;Tac&nbsp;Toe — Arcade Edition</title>
+
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#12132A">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="XO Arcade">
+<link rel="icon" href="icons/icon-192.png" sizes="192x192" type="image/png">
+<link rel="apple-touch-icon" href="icons/icon-180.png">
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg-deep:      #12132A;
+    --bg-panel:     #1B1D3B;
+    --bg-panel-2:   #23264C;
+    --line:         #34386B;
+    --cyan:         #4CE0D2;
+    --cyan-dim:     rgba(76,224,210,0.15);
+    --magenta:      #FF5DA2;
+    --magenta-dim:  rgba(255,93,162,0.15);
+    --gold:         #FFC857;
+    --text:         #F3F1FF;
+    --text-muted:   #8B8FBF;
+    --radius-lg:    22px;
+    --radius-md:    14px;
+    --font-display: 'Chakra Petch', sans-serif;
+    --font-body:    'Inter', sans-serif;
+  }
+
+  *{ box-sizing: border-box; }
+
+  html,body{
+    margin:0;
+    min-height:100vh;
+    background:
+      radial-gradient(circle at 15% 10%, rgba(76,224,210,0.10), transparent 40%),
+      radial-gradient(circle at 85% 90%, rgba(255,93,162,0.12), transparent 45%),
+      var(--bg-deep);
+    color:var(--text);
+    font-family:var(--font-body);
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    padding:32px 16px;
+  }
+
+  @media (prefers-reduced-motion: reduce){
+    *{ animation-duration:0.001ms !important; transition-duration:0.001ms !important; }
+  }
+
+  .console{
+    width:100%;
+    max-width:460px;
+    background:linear-gradient(180deg, var(--bg-panel), var(--bg-panel-2));
+    border:1px solid var(--line);
+    border-radius:var(--radius-lg);
+    padding:28px 26px 26px;
+    box-shadow:
+      0 0 0 1px rgba(255,255,255,0.02) inset,
+      0 30px 60px -25px rgba(0,0,0,0.7),
+      0 0 80px -30px rgba(76,224,210,0.25);
+    position:relative;
+    overflow:hidden;
+  }
+
+  .console::before{
+    content:"";
+    position:absolute;
+    top:-2px; left:0; right:0; height:3px;
+    background:linear-gradient(90deg, var(--cyan), var(--magenta), var(--gold), var(--cyan));
+    background-size:300% 100%;
+    animation:marquee 6s linear infinite;
+    opacity:0.9;
+  }
+  @keyframes marquee{
+    to{ background-position:300% 0; }
+  }
+
+  header{
+    text-align:center;
+    margin-bottom:20px;
+  }
+
+  h1{
+    font-family:var(--font-display);
+    font-weight:700;
+    font-size:26px;
+    letter-spacing:0.06em;
+    margin:0;
+    text-transform:uppercase;
+  }
+  h1 span{ color:var(--cyan); }
+  h1 span.o{ color:var(--magenta); }
+
+  .tagline{
+    margin:6px 0 0;
+    font-size:12.5px;
+    color:var(--text-muted);
+    letter-spacing:0.04em;
+  }
+
+  /* Name inputs */
+  .name-inputs{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:10px;
+    margin-bottom:14px;
+  }
+  .name-field{
+    display:flex;
+    flex-direction:column;
+    gap:5px;
+  }
+  .name-field label{
+    font-family:var(--font-display);
+    font-size:10.5px;
+    letter-spacing:0.08em;
+    text-transform:uppercase;
+    color:var(--text-muted);
+  }
+  .name-field input{
+    width:100%;
+    background:rgba(0,0,0,0.25);
+    border:1px solid var(--line);
+    border-radius:10px;
+    padding:9px 10px;
+    font-family:var(--font-body);
+    font-size:13.5px;
+    color:var(--text);
+    transition:border-color 0.2s, box-shadow 0.2s;
+  }
+  .name-field input::placeholder{ color:var(--text-muted); opacity:0.7; }
+  .x-field input:focus{
+    outline:none;
+    border-color:var(--cyan);
+    box-shadow:0 0 0 3px var(--cyan-dim);
+  }
+  .o-field input:focus{
+    outline:none;
+    border-color:var(--magenta);
+    box-shadow:0 0 0 3px var(--magenta-dim);
+  }
+
+  /* Scoreboard */
+  .scoreboard{
+    display:grid;
+    grid-template-columns:1fr 1fr 1fr;
+    gap:10px;
+    margin-bottom:18px;
+  }
+  .score-card{
+    background:rgba(0,0,0,0.22);
+    border:1px solid var(--line);
+    border-radius:var(--radius-md);
+    padding:10px 8px;
+    text-align:center;
+    transition:border-color 0.25s, box-shadow 0.25s;
+  }
+  .score-card .label{
+    font-family:var(--font-display);
+    font-size:11px;
+    letter-spacing:0.08em;
+    color:var(--text-muted);
+    text-transform:uppercase;
+  }
+  .score-card .value{
+    font-family:var(--font-display);
+    font-size:26px;
+    font-weight:700;
+    margin-top:2px;
+  }
+  .score-card.x-card .value{ color:var(--cyan); }
+  .score-card.o-card .value{ color:var(--magenta); }
+  .score-card.draw-card .value{ color:var(--gold); }
+
+  .score-card.active-turn{
+    border-color:currentColor;
+    box-shadow:0 0 0 1px currentColor, 0 0 18px -4px currentColor;
+  }
+  .score-card.x-card.active-turn{ color:var(--cyan); }
+  .score-card.o-card.active-turn{ color:var(--magenta); }
+
+  /* Status line */
+  .status{
+    text-align:center;
+    font-family:var(--font-display);
+    font-size:15px;
+    letter-spacing:0.02em;
+    min-height:22px;
+    margin-bottom:16px;
+    color:var(--text);
+    transition:color 0.2s;
+  }
+  .status.win-x{ color:var(--cyan); }
+  .status.win-o{ color:var(--magenta); }
+  .status.draw{ color:var(--gold); }
+
+  /* Board */
+  .board-wrap{
+    position:relative;
+    width:100%;
+    aspect-ratio:1/1;
+    max-width:360px;
+    margin:0 auto;
+  }
+
+  .board{
+    position:relative;
+    display:grid;
+    grid-template-columns:repeat(3, 1fr);
+    grid-template-rows:repeat(3, 1fr);
+    gap:10px;
+    width:100%;
+    height:100%;
+  }
+
+  .cell{
+    background:rgba(0,0,0,0.25);
+    border:1px solid var(--line);
+    border-radius:var(--radius-md);
+    cursor:pointer;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    padding:0;
+    transition:background 0.18s, transform 0.12s, border-color 0.18s;
+    position:relative;
+  }
+  .cell:hover:not(.filled):not(.locked){
+    background:rgba(255,255,255,0.04);
+    border-color:var(--text-muted);
+  }
+  .cell:active:not(.filled):not(.locked){
+    transform:scale(0.96);
+  }
+  .cell:focus-visible{
+    outline:2px solid var(--gold);
+    outline-offset:3px;
+  }
+  .cell.filled{ cursor:default; }
+
+  .cell.win-cell{
+    background:rgba(255,200,87,0.10);
+    border-color:var(--gold);
+    box-shadow:0 0 22px -6px rgba(255,200,87,0.6);
+  }
+
+  .cell svg{
+    width:58%;
+    height:58%;
+    overflow:visible;
+  }
+
+  .mark-path{
+    fill:none;
+    stroke-width:9;
+    stroke-linecap:round;
+    stroke-linejoin:round;
+    stroke-dasharray:180;
+    stroke-dashoffset:180;
+    animation:draw-mark 0.38s ease forwards;
+  }
+  .mark-x .mark-path{ stroke:var(--cyan); }
+  .mark-o .mark-path{ stroke:var(--magenta); }
+
+  @keyframes draw-mark{
+    to{ stroke-dashoffset:0; }
+  }
+
+  /* winning line overlay */
+  .win-line-svg{
+    position:absolute;
+    inset:0;
+    width:100%;
+    height:100%;
+    pointer-events:none;
+    overflow:visible;
+  }
+  .win-line{
+    fill:none;
+    stroke:var(--gold);
+    stroke-width:6;
+    stroke-linecap:round;
+    stroke-dasharray:500;
+    stroke-dashoffset:500;
+    filter:drop-shadow(0 0 8px rgba(255,200,87,0.8));
+    animation:draw-line 0.45s ease forwards;
+  }
+  @keyframes draw-line{
+    to{ stroke-dashoffset:0; }
+  }
+
+  /* Controls */
+  .controls{
+    display:flex;
+    gap:10px;
+    margin-top:20px;
+  }
+  button.action{
+    flex:1;
+    font-family:var(--font-display);
+    font-size:13px;
+    letter-spacing:0.05em;
+    text-transform:uppercase;
+    font-weight:600;
+    padding:12px 10px;
+    border-radius:var(--radius-md);
+    border:1px solid var(--line);
+    background:rgba(255,255,255,0.03);
+    color:var(--text);
+    cursor:pointer;
+    transition:border-color 0.2s, background 0.2s, transform 0.12s;
+  }
+  button.action:hover{
+    border-color:var(--cyan);
+    background:rgba(76,224,210,0.08);
+  }
+  button.action:active{ transform:scale(0.97); }
+  button.action:focus-visible{
+    outline:2px solid var(--gold);
+    outline-offset:2px;
+  }
+  button.action.secondary:hover{
+    border-color:var(--magenta);
+    background:rgba(255,93,162,0.08);
+  }
+  button.action.sound-btn{
+    flex:0 0 48px;
+    padding:12px 0;
+    font-size:16px;
+  }
+  button.action.sound-btn[aria-pressed="false"]{
+    color:var(--text-muted);
+    border-color:var(--line);
+  }
+
+  footer{
+    text-align:center;
+    margin-top:16px;
+    font-size:11.5px;
+    color:var(--text-muted);
+    letter-spacing:0.02em;
+  }
+  footer kbd{
+    background:rgba(255,255,255,0.06);
+    border:1px solid var(--line);
+    border-radius:4px;
+    padding:1px 5px;
+    font-family:var(--font-body);
+  }
+</style>
+</head>
+<body>
+
+<main class="console">
+  <header>
+    <h1><span class="x">X</span> · <span class="o">O</span> Arcade</h1>
+    <p class="tagline">First to three in a row wins the round</p>
+  </header>
+
+  <div class="name-inputs">
+    <div class="name-field x-field">
+      <label for="nameX">Player X</label>
+      <input type="text" id="nameX" maxlength="14" placeholder="Player X" autocomplete="off">
+    </div>
+    <div class="name-field o-field">
+      <label for="nameO">Player O</label>
+      <input type="text" id="nameO" maxlength="14" placeholder="Player O" autocomplete="off">
+    </div>
+  </div>
+
+  <div class="scoreboard">
+    <div class="score-card x-card" id="cardX">
+      <div class="label" id="labelX">Player X</div>
+      <div class="value" id="scoreX">0</div>
+    </div>
+    <div class="score-card draw-card" id="cardDraw">
+      <div class="label">Draws</div>
+      <div class="value" id="scoreDraw">0</div>
+    </div>
+    <div class="score-card o-card" id="cardO">
+      <div class="label" id="labelO">Player O</div>
+      <div class="value" id="scoreO">0</div>
+    </div>
+  </div>
+
+  <p class="status" id="status" aria-live="polite">Player X's turn</p>
+
+  <div class="board-wrap">
+    <div class="board" id="board" role="grid" aria-label="Tic tac toe board"></div>
+    <svg class="win-line-svg" id="winLineSvg" viewBox="0 0 340 340" aria-hidden="true"></svg>
+  </div>
+
+  <div class="controls">
+    <button class="action" id="newRoundBtn">New Round</button>
+    <button class="action secondary" id="resetScoreBtn">Reset Score</button>
+    <button class="action sound-btn" id="soundBtn" aria-pressed="true" title="Toggle sound">🔊</button>
+  </div>
+
+  <footer>Click any square, or tab and press <kbd>Enter</kbd></footer>
+</main>
+
+<script>
+(function(){
+
+  /* ---------- Sound engine (synthesized, no external assets) ---------- */
+  const SoundEngine = (function(){
+    let ctx = null;
+    let musicOn = true;
+    let musicNodes = null;
+    let musicStep = 0;
+    let musicTimer = null;
+
+    function ensureCtx(){
+      if(!ctx){
+        ctx = new (window.AudioContext || window.webkitAudioContext)();
+      }
+      if(ctx.state === 'suspended') ctx.resume();
+      return ctx;
+    }
+
+    function tone({freq, duration=0.18, type='sine', gain=0.18, startTime=0, glideTo=null}){
+      const c = ensureCtx();
+      const osc = c.createOscillator();
+      const amp = c.createGain();
+      osc.type = type;
+      osc.frequency.setValueAtTime(freq, c.currentTime + startTime);
+      if(glideTo){
+        osc.frequency.exponentialRampToValueAtTime(glideTo, c.currentTime + startTime + duration);
+      }
+      amp.gain.setValueAtTime(0.0001, c.currentTime + startTime);
+      amp.gain.exponentialRampToValueAtTime(gain, c.currentTime + startTime + 0.012);
+      amp.gain.exponentialRampToValueAtTime(0.0001, c.currentTime + startTime + duration);
+      osc.connect(amp).connect(c.destination);
+      osc.start(c.currentTime + startTime);
+      osc.stop(c.currentTime + startTime + duration + 0.02);
+    }
+
+    function clickX(){
+      if(!musicOn) return;
+      tone({freq:520, duration:0.10, type:'triangle', gain:0.16, glideTo:640});
+    }
+    function clickO(){
+      if(!musicOn) return;
+      tone({freq:380, duration:0.10, type:'triangle', gain:0.16, glideTo:300});
+    }
+    function win(){
+      if(!musicOn) return;
+      const notes = [523.25, 659.25, 783.99, 1046.5]; // C E G C major arpeggio
+      notes.forEach((f,i) => tone({freq:f, duration:0.22, type:'square', gain:0.14, startTime:i*0.09}));
+    }
+    function draw(){
+      if(!musicOn) return;
+      tone({freq:220, duration:0.30, type:'sawtooth', gain:0.12});
+      tone({freq:196, duration:0.35, type:'sawtooth', gain:0.10, startTime:0.06});
+    }
+
+    // Gentle ambient background loop: soft pad + slow arpeggio, low volume
+    const scale = [261.63, 293.66, 329.63, 392.00, 440.00, 523.25]; // C D E G A C (pentatonic-ish, calm)
+
+    function scheduleMusicStep(){
+      if(!musicOn) return;
+      const c = ensureCtx();
+      const note = scale[Math.floor(Math.random()*scale.length)] / 2; // low register
+      tone({freq:note, duration:1.6, type:'sine', gain:0.045, startTime:0});
+      musicTimer = setTimeout(scheduleMusicStep, 1500 + Math.random()*700);
+    }
+
+    function startMusic(){
+      if(musicTimer) return;
+      ensureCtx();
+      scheduleMusicStep();
+    }
+    function stopMusic(){
+      if(musicTimer){ clearTimeout(musicTimer); musicTimer = null; }
+    }
+
+    function setEnabled(on){
+      musicOn = on;
+      if(on) startMusic(); else stopMusic();
+    }
+    function isEnabled(){ return musicOn; }
+    function unlock(){ ensureCtx(); if(musicOn) startMusic(); }
+
+    return { clickX, clickO, win, draw, startMusic, stopMusic, setEnabled, isEnabled, unlock };
+  })();
+
+  const boardEl = document.getElementById('board');
+  const statusEl = document.getElementById('status');
+  const winLineSvg = document.getElementById('winLineSvg');
+  const scoreXEl = document.getElementById('scoreX');
+  const scoreOEl = document.getElementById('scoreO');
+  const scoreDrawEl = document.getElementById('scoreDraw');
+  const cardX = document.getElementById('cardX');
+  const cardO = document.getElementById('cardO');
+  const newRoundBtn = document.getElementById('newRoundBtn');
+  const resetScoreBtn = document.getElementById('resetScoreBtn');
+  const soundBtn = document.getElementById('soundBtn');
+  const nameXInput = document.getElementById('nameX');
+  const nameOInput = document.getElementById('nameO');
+  const labelXEl = document.getElementById('labelX');
+  const labelOEl = document.getElementById('labelO');
+
+  const names = { X:'Player X', O:'Player O' };
+
+  function displayName(player){
+    return names[player];
+  }
+
+  function updateNameLabels(){
+    labelXEl.textContent = names.X;
+    labelOEl.textContent = names.O;
+  }
+
+  function sanitizeName(raw, fallback){
+    const trimmed = raw.trim();
+    return trimmed.length ? trimmed : fallback;
+  }
+
+  nameXInput.addEventListener('input', () => {
+    names.X = sanitizeName(nameXInput.value, 'Player X');
+    updateNameLabels();
+    if(!gameOver) updateStatus();
+  });
+  nameOInput.addEventListener('input', () => {
+    names.O = sanitizeName(nameOInput.value, 'Player O');
+    updateNameLabels();
+    if(!gameOver) updateStatus();
+  });
+
+  const WIN_LINES = [
+    [0,1,2],[3,4,5],[6,7,8],  // rows
+    [0,3,6],[1,4,7],[2,5,8],  // cols
+    [0,4,8],[2,4,6]           // diagonals
+  ];
+
+  let board = Array(9).fill(null);
+  let current = 'X';
+  let gameOver = false;
+  let scores = { X:0, O:0, draw:0 };
+
+  const xIcon = `<svg viewBox="0 0 100 100" class="mark-x">
+      <path class="mark-path" d="M22,22 L78,78" />
+      <path class="mark-path" d="M78,22 L22,78" />
+    </svg>`;
+  const oIcon = `<svg viewBox="0 0 100 100" class="mark-o">
+      <circle class="mark-path" cx="50" cy="50" r="32" style="stroke-dasharray:201; stroke-dashoffset:201;" />
+    </svg>`;
+
+  function buildBoard(){
+    boardEl.innerHTML = '';
+    for(let i=0;i<9;i++){
+      const cell = document.createElement('button');
+      cell.className = 'cell';
+      cell.setAttribute('role','gridcell');
+      cell.setAttribute('aria-label', `Row ${Math.floor(i/3)+1}, column ${i%3+1}, empty`);
+      cell.dataset.index = i;
+      cell.addEventListener('click', onCellClick);
+      boardEl.appendChild(cell);
+    }
+  }
+
+  function onCellClick(e){
+    const i = Number(e.currentTarget.dataset.index);
+    if(gameOver || board[i]) return;
+    SoundEngine.unlock();
+    if(current === 'X') SoundEngine.clickX(); else SoundEngine.clickO();
+    placeMark(i, current);
+    const result = checkResult();
+    if(result){
+      handleResult(result);
+    } else {
+      current = current === 'X' ? 'O' : 'X';
+      updateStatus();
+      updateActiveTurn();
+    }
+  }
+
+  function placeMark(i, player){
+    board[i] = player;
+    const cell = boardEl.children[i];
+    cell.classList.add('filled', player === 'X' ? 'mark-x-cell' : 'mark-o-cell');
+    cell.innerHTML = player === 'X' ? xIcon : oIcon;
+    cell.setAttribute('aria-label', `Row ${Math.floor(i/3)+1}, column ${i%3+1}, ${displayName(player)}`);
+  }
+
+  function checkResult(){
+    for(const line of WIN_LINES){
+      const [a,b,c] = line;
+      if(board[a] && board[a] === board[b] && board[b] === board[c]){
+        return { winner: board[a], line };
+      }
+    }
+    if(board.every(v => v !== null)){
+      return { winner:null, line:null }; // draw
+    }
+    return null;
+  }
+
+  function handleResult(result){
+    gameOver = true;
+    lockBoard();
+    if(result.winner){
+      scores[result.winner]++;
+      updateScoreboard();
+      statusEl.textContent = `${displayName(result.winner)} wins the round!`;
+      statusEl.className = 'status ' + (result.winner === 'X' ? 'win-x' : 'win-o');
+      highlightWin(result.line);
+      drawWinLine(result.line);
+      SoundEngine.win();
+    } else {
+      scores.draw++;
+      updateScoreboard();
+      statusEl.textContent = "It's a draw!";
+      statusEl.className = 'status draw';
+      SoundEngine.draw();
+    }
+    cardX.classList.remove('active-turn');
+    cardO.classList.remove('active-turn');
+  }
+
+  function highlightWin(line){
+    line.forEach(i => boardEl.children[i].classList.add('win-cell'));
+  }
+
+  function lockBoard(){
+    [...boardEl.children].forEach(c => c.classList.add('locked'));
+  }
+
+  function drawWinLine(line){
+    // cell centers on a 340x340 viewbox matching 3x3 grid with 10px gaps
+    const size = 340;
+    const gap = 10;
+    const cellSize = (size - gap*2)/3;
+    const centerOf = (idx) => {
+      const row = Math.floor(idx/3), col = idx%3;
+      return {
+        x: col*(cellSize+gap) + cellSize/2,
+        y: row*(cellSize+gap) + cellSize/2
+      };
+    };
+    const start = centerOf(line[0]);
+    const end = centerOf(line[2]);
+    // extend slightly beyond the outer cells for a satisfying overshoot
+    const dx = end.x - start.x, dy = end.y - start.y;
+    const ext = 0.28;
+    const x1 = start.x - dx*ext, y1 = start.y - dy*ext;
+    const x2 = end.x + dx*ext, y2 = end.y + dy*ext;
+
+    winLineSvg.innerHTML = `<line class="win-line" x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" />`;
+  }
+
+  function clearWinLine(){
+    winLineSvg.innerHTML = '';
+  }
+
+  function updateStatus(){
+    statusEl.textContent = `${displayName(current)}'s turn`;
+    statusEl.className = 'status';
+  }
+
+  function updateActiveTurn(){
+    cardX.classList.toggle('active-turn', current === 'X' && !gameOver);
+    cardO.classList.toggle('active-turn', current === 'O' && !gameOver);
+  }
+
+  function updateScoreboard(){
+    scoreXEl.textContent = scores.X;
+    scoreOEl.textContent = scores.O;
+    scoreDrawEl.textContent = scores.draw;
+  }
+
+  function newRound(){
+    board = Array(9).fill(null);
+    current = 'X';
+    gameOver = false;
+    clearWinLine();
+    buildBoard();
+    updateStatus();
+    updateActiveTurn();
+  }
+
+  function resetAll(){
+    scores = { X:0, O:0, draw:0 };
+    updateScoreboard();
+    newRound();
+  }
+
+  newRoundBtn.addEventListener('click', () => { SoundEngine.unlock(); newRound(); });
+  resetScoreBtn.addEventListener('click', () => { SoundEngine.unlock(); resetAll(); });
+
+  soundBtn.addEventListener('click', () => {
+    const nowOn = !SoundEngine.isEnabled();
+    SoundEngine.setEnabled(nowOn);
+    soundBtn.textContent = nowOn ? '🔊' : '🔇';
+    soundBtn.setAttribute('aria-pressed', String(nowOn));
+    if(nowOn) SoundEngine.unlock();
+  });
+
+  // Any first interaction anywhere on the page unlocks audio (autoplay policy)
+  document.body.addEventListener('pointerdown', () => SoundEngine.unlock(), { once:true });
+
+  // init
+  buildBoard();
+  updateNameLabels();
+  updateScoreboard();
+  updateStatus();
+  updateActiveTurn();
+
+  if('serviceWorker' in navigator){
+    window.addEventListener('load', () => {
+      navigator.serviceWorker.register('sw.js').catch(() => {});
+    });
+  }
+})();
+</script>
+
+</body>
+</html>
